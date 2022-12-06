@@ -2,12 +2,11 @@ from datetime import datetime
 
 from aiogoogle import Aiogoogle
 
-# В секретах лежит адрес вашего личного google-аккаунта
 from app.core.config import settings
 from app.models import CharityProject
 
-# Константа с форматом строкового представления времени
 FORMAT = "%Y/%m/%d %H:%M:%S"
+
 
 async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
     now_date_time = datetime.now().strftime(FORMAT)
@@ -27,6 +26,7 @@ async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
     spreadsheetid = response['spreadsheetId']
     return spreadsheetid
 
+
 async def set_user_permissions(
         spreadsheetid: str,
         wrapper_services: Aiogoogle
@@ -41,6 +41,7 @@ async def set_user_permissions(
             json=permissions_body,
             fields="id"
         ))
+
 
 async def spreadsheets_update_value(
         spreadsheetid: str,
@@ -74,4 +75,4 @@ async def spreadsheets_update_value(
             valueInputOption='USER_ENTERED',
             json=update_body
         )
-    ) 
+    )
