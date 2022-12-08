@@ -6,13 +6,18 @@ from app.core.config import settings
 from app.models import CharityProject
 
 FORMAT = "%Y/%m/%d %H:%M:%S"
+NOW_DATE_TIME = datetime.now().strftime(FORMAT)
+TABLE_VALUES = [
+        ['Отчет от', NOW_DATE_TIME],
+        ['Топ проектов по скорости закрытия'],
+        ['Название проекта', 'Время сбора', 'Описание']
+    ]
 
 
 async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
-    now_date_time = datetime.now().strftime(FORMAT)
     service = await wrapper_services.discover('sheets', 'v4')
     spreadsheet_body = {
-        'properties': {'title': f'Отчет от {now_date_time}',
+        'properties': {'title': f'Отчет от {NOW_DATE_TIME}',
                        'locale': 'ru_RU'},
         'sheets': [{'properties': {'sheetType': 'GRID',
                                    'sheetId': 0,
@@ -23,12 +28,13 @@ async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
     response = await wrapper_services.as_service_account(
         service.spreadsheets.create(json=spreadsheet_body)
     )
-    spreadsheetid = response['spreadsheetId']
-    return spreadsheetid
+    print(dir(response))
+    spreadsheet_id = response['spreadsheetId']
+    return spreadsheet_id
 
 
 async def set_user_permissions(
-        spreadsheetid: str,
+        spreadsheet_id: str,
         wrapper_services: Aiogoogle
 ) -> None:
     permissions_body = {'type': 'user',
@@ -37,40 +43,33 @@ async def set_user_permissions(
     service = await wrapper_services.discover('drive', 'v3')
     await wrapper_services.as_service_account(
         service.permissions.create(
-            fileId=spreadsheetid,
+            fileId=spreadsheet_id,
             json=permissions_body,
             fields="id"
         ))
 
 
 async def spreadsheets_update_value(
-        spreadsheetid: str,
+        spreadsheet_id: str,
         projects: list[CharityProject],
         wrapper_services: Aiogoogle
 ) -> None:
-    now_date_time = datetime.now().strftime(FORMAT)
     service = await wrapper_services.discover('sheets', 'v4')
     # Здесь формируется тело таблицы
-    table_values = [
-        ['Отчет от', now_date_time],
-        ['Топ проектов по скорости закрытия'],
-        ['Название проекта', 'Время сбора', 'Описание']
-    ]
     for project in projects:
         new_row = [
             str(project.name),
             str(project.close_date - project.create_date),
             str(project.description)
         ]
-        table_values.append(new_row)
-
+        TABLE_VALUES.append(new_row)
     update_body = {
         'majorDimension': 'ROWS',
-        'values': table_values
+        'values': TABLE_VALUES
     }
     await wrapper_services.as_service_account(
         service.spreadsheets.values.update(
-            spreadsheetId=spreadsheetid,
+            spreadsheetId=spreadsheet_id,
             range='A1:E30',
             valueInputOption='USER_ENTERED',
             json=update_body
