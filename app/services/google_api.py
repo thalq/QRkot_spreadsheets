@@ -12,10 +12,11 @@ NOW_DATE_TIME = datetime.now().strftime(FORMAT)
 ROW_COUNT = 100
 COLUMN_COUNT = 11
 TABLE_VALUES = [
-        ['Отчет от', NOW_DATE_TIME],
-        ['Топ проектов по скорости закрытия'],
-        ['Название проекта', 'Время сбора', 'Описание']
-    ]
+    ['Отчет от', NOW_DATE_TIME],
+    ['Топ проектов по скорости закрытия'],
+    ['Название проекта', 'Время сбора', 'Описание']
+]
+
 
 async def spreadsheets_create(wrapper_services: Aiogoogle) -> str:
     service = await wrapper_services.discover('sheets', 'v4')
